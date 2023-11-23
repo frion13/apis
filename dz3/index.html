@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея изображений с Unsplash</title>
+    <style>
+        .liked {
+            color: red; 
+        }
+
+        .photo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .photo-item {
+            flex: 0 0 calc(20% - 20px); 
+            margin-bottom: 20px;
+           
+        }
+        img{
+            width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gallery" class="photo-container"></div>
+
+<script>
+    const accessKey = 'ofj6MvySJkzeLwt8RBI6XwN58c5dIs2z6SbL1zYdJbg';
+    const apiUrl = 'https://api.unsplash.com/photos/random ';
+    const numberOfPhotos = 5; 
+
+  
+    const galleryElement = document.getElementById('gallery');
+
+   
+    function loadRandomPhotos() {
+        for (let i = 0; i < numberOfPhotos; i++) {
+            fetch(apiUrl, {
+                headers: {
+                    Authorization: `Client-ID ${accessKey}`,
+                },
+            })
+            .then(response => {
+                
+                const rateLimitLimit = response.headers.get('X-Ratelimit-Limit');
+                const rateLimitRemaining = response.headers.get('X-Ratelimit-Remaining');
+                console.log(`Лимит запросов: ${rateLimitRemaining}/${rateLimitLimit}`);
+                if (!response.ok) {
+                    throw new Error(`Ошибка: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const photoContainer = document.createElement('div');
+                photoContainer.classList.add('photo-item');
+                const photoElement = document.createElement('img');
+                photoElement.src = data.urls.regular;
+                photoElement.alt = data.alt_description;
+                const photographerNameElement = document.createElement('p');
+                photographerNameElement.textContent = `Фотограф: ${data.user.name}`;
+                const likeButton = document.createElement('button');
+                likeButton.textContent = 'Лайк';
+                likeButton.addEventListener('click', () => {
+                    likeButton.classList.toggle('liked');
+                    likeButton.textContent = likeButton.classList.contains('liked') ? '❤ Лайк' : 'Лайк';
+                });
+
+             
+                photoContainer.appendChild(photoElement);
+                photoContainer.appendChild(photographerNameElement);
+                photoContainer.appendChild(likeButton);
+
+             
+                galleryElement.appendChild(photoContainer);
+            })
+            .catch(error => {
+                console.error('Ошибка при получении данных с Unsplash:', error);
+            });
+        }
+    }
+
+    window.addEventListener('load', loadRandomPhotos);
+</script>
+
+</body>
+</html>
